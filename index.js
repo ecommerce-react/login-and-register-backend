@@ -1,12 +1,17 @@
-import express from "express";
-import cors from "cors";
-import mongoose from "mongoose";
+const express = require("express");
+const fs = require("fs");
+const cors = require("cors");
+const mongoose = require("mongoose");
 
+// Initialize the express app
 const app = express();
+
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+// Connect to MongoDB database
 mongoose
   .connect("mongodb://localhost:27017/myLoginRegisterDB", {
     useNewUrlParser: true,
@@ -19,53 +24,10 @@ mongoose
     console.error("DB Connection Error: " + err);
   });
 
-const userSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String,
-});
-
-const User = mongoose.model("User", userSchema);
-
-// Routes
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-
-  if (user) {
-    if (password === user.password) {
-      res.send({ message: "Login Successfull", user: user });
-    } else {
-      res.send("Wrong password");
-    }
-  } else {
-    res.send("User not registered");
-  }
-});
-
-app.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
-
-  const existingUser = await User.findOne({ email: email });
-
-  if (existingUser) {
-    return res.json({
-      message: "Your account already exists, login to continue",
-    });
-  }
-
-  const newUser = new User({
-    name,
-    email,
-    password,
-  });
-
-  newUser.save();
-
-  return res.json({
-    message: "Signed up successfully, login now!",
-  });
-});
+// Routes (read routes in the "routes" dir and prepend "/api" to all routes)
+fs.readdirSync("./routes").map((route) =>
+  app.use(`/api/${process.env.API_VERSION}`, require("./routes/" + route))
+);
 
 app.listen(9002, () => {
   console.log("BE Started at port 9002");
