@@ -6,6 +6,8 @@ const mongoose = require("mongoose");
 // Initialize the express app
 const app = express();
 
+require("dotenv").config();
+
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
