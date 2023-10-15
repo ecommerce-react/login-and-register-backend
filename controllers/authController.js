@@ -50,3 +50,44 @@ exports.login = async (req, res) => {
     res.send("User not registered");
   }
 };
+
+// checkUserLoggedIn
+exports.checkUserLoggedIn = async (req, res) => {
+  try {
+    // Get the token from headers
+    const token = req.headers.authorization;
+
+    // If token exists
+    if (token) {
+      jwt.verify(
+        token,
+        process.env.JWT_ACCESS_SECRET,
+        async (err, userObject) => {
+          // If the token provided is not valid
+          if (err) {
+            return res.status(401).json({
+              error: true,
+              type: [
+                {
+                  code: "GLOBAL_ERROR",
+                  message: "Token is not valid or expired, please log in again",
+                },
+              ],
+            });
+          }
+          console.log("DECODEDDD", userObject);
+
+          const user = await UserService.findOneUser({ _id: userObject._id });
+
+          res.send({
+            message: "ALready Logged in",
+            user: user,
+            token: token,
+          });
+        }
+      );
+    }
+  } catch (error) {
+    console.log("err", error);
+  }
+};
